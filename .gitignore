@@ -1,0 +1,32 @@
+# .NET Core
+*.swp
+*.*~
+*/src/project.lock.json
+*/.DS_Store
+*.pyc
+*/src/nupkg/
+
+# Visual Studio Code
+.vscode
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+*/src/[Dd]ebug/
+*/src/[Dd]ebugPublic/
+*/src/[Rr]elease/
+*/src/[Rr]eleases/
+*/src/x64/
+*/src/x86/
+*/src/build/
+*/src/bld/
+*/src/[Bb]in/
+*/src/[Oo]bj/
+*/src/[Oo]ut/
+*/src/msbuild.log
+*/src/msbuild.err
+*/src/msbuild.wrn
