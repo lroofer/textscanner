@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "/RdaRRvNx/Y=",
+  "success": true,
+  "projectFilePath": "/Users/lroofer/Documents/University/KPO/textscanner/file-analysis-service/FileStoringService/FileStoringService.csproj",
+  "expectedPackageFiles": [
+    "/Users/lroofer/.nuget/packages/microsoft.aspnetcore.openapi/9.0.4/microsoft.aspnetcore.openapi.9.0.4.nupkg.sha512",
+    "/Users/lroofer/.nuget/packages/microsoft.openapi/1.6.17/microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}

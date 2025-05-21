@@ -1,0 +1,6 @@
+@FileStoringService_HostAddress = http://localhost:5177
+
+GET {{FileStoringService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

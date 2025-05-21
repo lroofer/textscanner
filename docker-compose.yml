@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway
+    ports:
+      - "5000:80"
+    depends_on:
+      - file-storing-service
+      - file-analysis-service
+    networks:
+      - scanner-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - FileStoringService__Url=http://file-storing-service
+      - FileAnalysisService__Url=http://file-analysis-service
+
+  file-storing-service:
+    build:
+      context: ./file-storing-service
+    depends_on:
+      - file-storing-db
+    networks:
+      - scanner-network
+    volumes:
+      - file-storage:/app/storage
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__FileStoringDb=Host=file-storing-db;Database=filestoring;Username=postgres;Password=postgres
+      - StoragePath=/app/storage
+
+  file-analysis-service:
+    build:
+      context: ./file-analysis-service
+    depends_on:
+      - file-analysis-db
+      - file-storing-service
+    networks:
+      - scanner-network
+    volumes:
+      - analysis-storage:/app/storage
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__FileAnalysisDb=Host=file-analysis-db;Database=fileanalysis;Username=postgres;Password=postgres
+      - FileStoringService__Url=http://file-storing-service
+      - StoragePath=/app/storage
+
+  file-storing-db:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=filestoring
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - file-storing-db-data:/var/lib/postgresql/data
+    networks:
+      - scanner-network
+
+  file-analysis-db:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=fileanalysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - file-analysis-db-data:/var/lib/postgresql/data
+    networks:
+      - scanner-network
+
+networks:
+  scanner-network:
+    driver: bridge
+
+volumes:
+  file-storing-db-data:
+  file-analysis-db-data:
+  file-storage:
+  analysis-storage:
