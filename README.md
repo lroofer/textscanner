@@ -14,3 +14,9 @@ Expected responses:
 To download file use GET command http://localhost:3535/api/download-file/{id}
 
 curl -v http://localhost:3535/api/download-file/f3d50fed-6ecf-45e0-a6bb-e14289243eeb -o downloaded_file.txt
+
+To analyza file use GET command http://localhost:3535/api/analyze-file/{id}
+
+It will return JSON as an answer
+
+curl -v http://localhost:3535/api/analyze-file/
