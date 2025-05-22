@@ -42,11 +42,14 @@ public class FilesController : ControllerBase
     {
         try
         {
+            _logger.LogInformation($"Retrieving file with ID {id}");
             var (fileStream, contentType, fileName) = await _fileStorageService.GetFileAsync(id);
+            
             return File(fileStream, contentType, fileName);
         }
         catch (FileNotFoundException)
         {
+            _logger.LogWarning($"File with ID {id} not found");
             return NotFound($"File with ID {id} not found");
         }
         catch (Exception ex)
@@ -55,4 +58,5 @@ public class FilesController : ControllerBase
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
+
 }

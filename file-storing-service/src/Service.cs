@@ -84,26 +84,31 @@ public class FileStorageService
         return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
     }
     
-    public async Task<(Stream FileStream, string ContentType, string FileName)> GetFileAsync(Guid id)
+        public async Task<(Stream FileStream, string ContentType, string FileName)> GetFileAsync(Guid id)
     {
         var fileEntity = await _dbContext.Files.FirstOrDefaultAsync(f => f.Id == id);
         if (fileEntity == null)
         {
+            _logger.LogWarning($"File with ID {id} not found in database");
             throw new FileNotFoundException($"File with ID {id} not found");
         }
         
         var fileInfo = new FileInfo(fileEntity.Location);
         if (!fileInfo.Exists)
         {
+            _logger.LogWarning($"File {fileEntity.Location} not found on disk");
             throw new FileNotFoundException($"File {fileEntity.Location} not found on disk");
         }
         
         var stream = new FileStream(fileEntity.Location, FileMode.Open, FileAccess.Read);
+        
         var contentType = GetContentType(fileEntity.FileName);
+        
+        _logger.LogInformation($"Retrieved file {fileEntity.FileName} with ID {id}");
         
         return (stream, contentType, fileEntity.FileName);
     }
-    
+
     private string GetContentType(string fileName)
     {
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
@@ -113,7 +118,14 @@ public class FileStorageService
             ".pdf" => "application/pdf",
             ".doc" => "application/msword",
             ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls" => "application/vnd.ms-excel",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".png" => "image/png",
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
             _ => "application/octet-stream"
         };
     }
+
 }

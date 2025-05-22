@@ -67,4 +67,83 @@ public class FileController : ControllerBase
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
+
+    [HttpGet("download-file/{id}")]
+    public async Task<IActionResult> DownloadFile(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            return BadRequest("Invalid file ID");
+        }
+        
+        var fileStoringServiceUrl = _configuration["FileStoringService:Url"];
+        if (string.IsNullOrEmpty(fileStoringServiceUrl))
+        {
+            _logger.LogError("File Storing Service URL is not configured");
+            return StatusCode(500, "Server configuration error");
+        }
+
+        try
+        {
+            _logger.LogInformation($"Downloading file with ID {id}");
+            
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            
+            using var response = await _httpClient.GetAsync(
+                $"{fileStoringServiceUrl}/api/files/{id}", 
+                HttpCompletionOption.ResponseHeadersRead,
+                cts.Token);
+            
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning($"File with ID {id} not found");
+                return NotFound($"File with ID {id} not found");
+            }
+            
+            response.EnsureSuccessStatusCode();
+            
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            var contentDisposition = response.Content.Headers.ContentDisposition;
+            var fileName = contentDisposition?.FileName;
+            
+            if (string.IsNullOrEmpty(fileName))
+            {
+                var contentLocation = response.Content.Headers.ContentLocation?.ToString();
+                if (!string.IsNullOrEmpty(contentLocation))
+                {
+                    fileName = Path.GetFileName(contentLocation);
+                }
+                else
+                {
+                    fileName = $"file_{id}";
+                }
+            }
+            else
+            {
+                fileName = fileName.Trim('"');
+            }
+            
+            _logger.LogInformation($"Streaming file {fileName} to client");
+            
+            var fileStream = await response.Content.ReadAsStreamAsync(cts.Token);
+            return File(fileStream, contentType, fileName);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning($"Request timeout when downloading file with ID {id}");
+            return StatusCode(408, "Request timeout");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, $"HTTP error when downloading file with ID {id}");
+            return StatusCode(ex.StatusCode.HasValue ? (int)ex.StatusCode.Value : 500, 
+                $"Error downloading file: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Unexpected error when downloading file with ID {id}");
+            return StatusCode(500, $"Unexpected error: {ex.Message}");
+        }
+    }
+
 }
