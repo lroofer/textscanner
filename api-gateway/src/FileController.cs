@@ -87,63 +87,44 @@ public class FileController : ControllerBase
         {
             _logger.LogInformation($"Downloading file with ID {id}");
             
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var fileUrl = $"{fileStoringServiceUrl}/api/files/{id}/bytes";
+            _logger.LogInformation($"Requesting file bytes from {fileUrl}");
             
-            using var response = await _httpClient.GetAsync(
-                $"{fileStoringServiceUrl}/api/files/{id}", 
-                HttpCompletionOption.ResponseHeadersRead,
-                cts.Token);
+            var response = await _httpClient.GetStringAsync(fileUrl);
             
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            var fileInfo = JsonSerializer.Deserialize<FileInfoWithBytes>(response, 
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            if (fileInfo == null)
             {
-                _logger.LogWarning($"File with ID {id} not found");
-                return NotFound($"File with ID {id} not found");
+                _logger.LogWarning("Failed to deserialize file info");
+                return StatusCode(500, "Failed to process file information");
             }
             
-            response.EnsureSuccessStatusCode();
+            var fileBytes = Convert.FromBase64String(fileInfo.Bytes);
             
-            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
-            var contentDisposition = response.Content.Headers.ContentDisposition;
-            var fileName = contentDisposition?.FileName;
+            _logger.LogInformation($"Received file {fileInfo.FileName}, size: {fileBytes.Length} bytes");
             
-            if (string.IsNullOrEmpty(fileName))
+            if (fileBytes.Length == 0)
             {
-                var contentLocation = response.Content.Headers.ContentLocation?.ToString();
-                if (!string.IsNullOrEmpty(contentLocation))
-                {
-                    fileName = Path.GetFileName(contentLocation);
-                }
-                else
-                {
-                    fileName = $"file_{id}";
-                }
-            }
-            else
-            {
-                fileName = fileName.Trim('"');
+                _logger.LogWarning("File content is empty");
+                return StatusCode(500, "File content is empty");
             }
             
-            _logger.LogInformation($"Streaming file {fileName} to client");
-            
-            var fileStream = await response.Content.ReadAsStreamAsync(cts.Token);
-            return File(fileStream, contentType, fileName);
-        }
-        catch (OperationCanceledException)
-        {
-            _logger.LogWarning($"Request timeout when downloading file with ID {id}");
-            return StatusCode(408, "Request timeout");
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, $"HTTP error when downloading file with ID {id}");
-            return StatusCode(ex.StatusCode.HasValue ? (int)ex.StatusCode.Value : 500, 
-                $"Error downloading file: {ex.Message}");
+            return File(fileBytes, fileInfo.ContentType, fileInfo.FileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Unexpected error when downloading file with ID {id}");
-            return StatusCode(500, $"Unexpected error: {ex.Message}");
+            _logger.LogError(ex, $"Error downloading file with ID {id}");
+            return StatusCode(500, $"Error downloading file: {ex.Message}");
         }
     }
-
+    public class FileInfoWithBytes
+    {
+        public Guid Id { get; set; }
+        public string FileName { get; set; } = string.Empty;
+        public string ContentType { get; set; } = string.Empty;
+        public long Size { get; set; }
+        public string Bytes { get; set; } = string.Empty;
+    }
 }
