@@ -19,6 +19,7 @@ public class FileController : ControllerBase
     }
 
     [HttpPost("upload-file")]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadFile(IFormFile file)
     {
         if (file == null || file.Length == 0)
@@ -37,21 +38,21 @@ public class FileController : ControllerBase
             using var content = new MultipartFormDataContent();
             using var fileStream = file.OpenReadStream();
             using var streamContent = new StreamContent(fileStream);
-            
+
             streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType);
             content.Add(streamContent, "file", file.FileName);
 
             var response = await _httpClient.PostAsync($"{fileStoringServiceUrl}/api/files", content);
-            
+
             if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
                 return StatusCode((int)response.StatusCode, responseContent);
             }
-            
+
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadAsStringAsync();
-            
+
             return Ok(result);
         }
         catch (Exception ex)
