@@ -42,18 +42,25 @@ public class FileController : ControllerBase
             streamContent.Headers.ContentType = MediaTypeHeaderValue.Parse(file.ContentType);
             content.Add(streamContent, "file", file.FileName);
 
+            _logger.LogInformation($"Sending file {file.FileName} to {fileStoringServiceUrl}/api/files");
+
             var response = await _httpClient.PostAsync($"{fileStoringServiceUrl}/api/files", content);
+
+            _logger.LogInformation($"Received response: {response.StatusCode}");
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
             {
-                var responseContent = await response.Content.ReadAsStringAsync();
                 return StatusCode((int)response.StatusCode, responseContent);
             }
-
-            response.EnsureSuccessStatusCode();
-            var result = await response.Content.ReadAsStringAsync();
-
-            return Ok(result);
+            else if (response.IsSuccessStatusCode)
+            {
+                return Ok(responseContent);
+            }
+            else
+            {
+                _logger.LogError($"Error from File Storing Service: {response.StatusCode}, {responseContent}");
+                return StatusCode((int)response.StatusCode, responseContent);
+            }
         }
         catch (Exception ex)
         {
