@@ -120,6 +120,59 @@ public class FileController : ControllerBase
             return StatusCode(500, $"Error downloading file: {ex.Message}");
         }
     }
+
+    [HttpGet("analyze-file/{id}")]
+    public async Task<IActionResult> AnalyzeFile(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            return BadRequest("Invalid file ID");
+        }
+        
+        var fileAnalysisServiceUrl = _configuration["FileAnalysisService:Url"];
+        if (string.IsNullOrEmpty(fileAnalysisServiceUrl))
+        {
+            _logger.LogError("File Analysis Service URL is not configured");
+            return StatusCode(500, "Server configuration error");
+        }
+
+        try
+        {
+            _logger.LogInformation($"Requesting analysis for file with ID {id}");
+            
+            // Формируем URL для запроса анализа
+            var analysisUrl = $"{fileAnalysisServiceUrl}/api/get_analysis/{id}";
+            _logger.LogInformation($"Requesting analysis from {analysisUrl}");
+            
+            // Отправляем запрос
+            var response = await _httpClient.GetAsync(analysisUrl);
+            
+            // Получаем содержимое ответа
+            var responseContent = await response.Content.ReadAsStringAsync();
+            
+            // Проверяем успешность запроса
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning($"Analysis service returned status code: {response.StatusCode}, Content: {responseContent}");
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return NotFound($"File with ID {id} not found");
+                }
+                
+                return StatusCode((int)response.StatusCode, responseContent);
+            }
+            
+            // Возвращаем результаты анализа
+            return Ok(responseContent);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error analyzing file with ID {id}");
+            return StatusCode(500, $"Error analyzing file: {ex.Message}");
+        }
+    }
+
     public class FileInfoWithBytes
     {
         public Guid Id { get; set; }

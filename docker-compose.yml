@@ -72,8 +72,15 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - file-analysis-db-data:/var/lib/postgresql/data
+      - ./init-file-analysis-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - scanner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 
 networks:
   scanner-network:
