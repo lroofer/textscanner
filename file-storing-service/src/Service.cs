@@ -84,30 +84,41 @@ public class FileStorageService
         return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
     }
     
-        public async Task<(Stream FileStream, string ContentType, string FileName)> GetFileAsync(Guid id)
+    public async Task<(Stream FileStream, string ContentType, string FileName)> GetFileAsync(Guid id)
     {
-        var fileEntity = await _dbContext.Files.FirstOrDefaultAsync(f => f.Id == id);
-        if (fileEntity == null)
+        try
         {
-            _logger.LogWarning($"File with ID {id} not found in database");
-            throw new FileNotFoundException($"File with ID {id} not found");
+            var fileEntity = await _dbContext.Files.FirstOrDefaultAsync(f => f.Id == id);
+            if (fileEntity == null)
+            {
+                _logger.LogWarning($"File with ID {id} not found in database");
+                throw new FileNotFoundException($"File with ID {id} not found");
+            }
+            
+            var filePath = fileEntity.Location;
+            if (!File.Exists(filePath))
+            {
+                _logger.LogWarning($"File {filePath} not found on disk");
+                throw new FileNotFoundException($"File {filePath} not found on disk");
+            }
+            
+            byte[] fileBytes = await File.ReadAllBytesAsync(filePath);
+            
+            var memoryStream = new MemoryStream(fileBytes);
+            
+            var contentType = GetContentType(fileEntity.FileName);
+            
+            _logger.LogInformation($"Retrieved file {fileEntity.FileName} with ID {id}, size: {fileBytes.Length} bytes");
+            
+            return (memoryStream, contentType, fileEntity.FileName);
         }
-        
-        var fileInfo = new FileInfo(fileEntity.Location);
-        if (!fileInfo.Exists)
+        catch (Exception ex)
         {
-            _logger.LogWarning($"File {fileEntity.Location} not found on disk");
-            throw new FileNotFoundException($"File {fileEntity.Location} not found on disk");
+            _logger.LogError(ex, $"Error retrieving file with ID {id}");
+            throw;
         }
-        
-        var stream = new FileStream(fileEntity.Location, FileMode.Open, FileAccess.Read);
-        
-        var contentType = GetContentType(fileEntity.FileName);
-        
-        _logger.LogInformation($"Retrieved file {fileEntity.FileName} with ID {id}");
-        
-        return (stream, contentType, fileEntity.FileName);
     }
+
 
     private string GetContentType(string fileName)
     {

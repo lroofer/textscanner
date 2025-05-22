@@ -45,12 +45,22 @@ public class FilesController : ControllerBase
             _logger.LogInformation($"Retrieving file with ID {id}");
             var (fileStream, contentType, fileName) = await _fileStorageService.GetFileAsync(id);
             
-            return File(fileStream, contentType, fileName);
+            fileStream.Position = 0;
+            
+            _logger.LogInformation($"Returning file {fileName}, size: {fileStream.Length} bytes, content type: {contentType}");
+            
+            var memoryStream = new MemoryStream();
+            await fileStream.CopyToAsync(memoryStream);
+            fileStream.Dispose();
+            
+            memoryStream.Position = 0;
+            
+            return File(memoryStream, contentType, fileName);
         }
-        catch (FileNotFoundException)
+        catch (FileNotFoundException ex)
         {
-            _logger.LogWarning($"File with ID {id} not found");
-            return NotFound($"File with ID {id} not found");
+            _logger.LogWarning(ex.Message);
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
@@ -58,5 +68,6 @@ public class FilesController : ControllerBase
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
+
 
 }
