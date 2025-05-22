@@ -21,7 +21,21 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<FileDbContext>();
-    dbContext.Database.Migrate();
+    dbContext.Database.EnsureCreated();
+    
+    try
+    {
+        if (!await dbContext.Files.AnyAsync())
+        {
+            app.Logger.LogInformation("Таблица Files существует, но пуста");
+        }
+    }
+    catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
+    {
+        app.Logger.LogWarning("Таблица Files не существует. Применяем миграции...");
+        
+        dbContext.Database.Migrate();
+    }
 }
 
 if (app.Environment.IsDevelopment())
