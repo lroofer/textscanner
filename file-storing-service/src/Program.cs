@@ -1,6 +1,7 @@
 using FileStoringService.Data;
 using FileStoringService.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,41 +19,26 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+bool databaseInitialized = false;
+const int maxRetries = 10;
+int retryCount = 0;
+
+while (!databaseInitialized && retryCount < maxRetries)
 {
-    var services = scope.ServiceProvider;
     try
     {
-        var dbContext = services.GetRequiredService<FileDbContext>();
-        var connection = dbContext.Database.GetDbConnection();
-        
-        app.Logger.LogInformation("Initializing database...");
-        
-        try
+        using (var scope = app.Services.CreateScope())
         {
-            connection.Open();
+            var services = scope.ServiceProvider;
+            var dbContext = services.GetRequiredService<FileDbContext>();
             
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '__EFMigrationsHistory')";
-                var migrationsTableExists = (bool)command.ExecuteScalar();
-                
-                if (!migrationsTableExists)
-                {
-                    app.Logger.LogInformation("Creating __EFMigrationsHistory table...");
-                    using (var createMigrationTableCommand = connection.CreateCommand())
-                    {
-                        createMigrationTableCommand.CommandText = @"
-                            CREATE TABLE ""__EFMigrationsHistory"" (
-                                ""MigrationId"" character varying(150) NOT NULL,
-                                ""ProductVersion"" character varying(32) NOT NULL,
-                                CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
-                            );
-                        ";
-                        createMigrationTableCommand.ExecuteNonQuery();
-                    }
-                }
-            }
+            app.Logger.LogInformation($"Попытка подключения к базе данных #{retryCount + 1}...");
+            
+            dbContext.Database.OpenConnection();
+            dbContext.Database.CloseConnection();
+            
+            var connection = dbContext.Database.GetDbConnection();
+            connection.Open();
             
             using (var command = connection.CreateCommand())
             {
@@ -61,11 +47,12 @@ using (var scope = app.Services.CreateScope())
                 
                 if (!filesTableExists)
                 {
-                    app.Logger.LogInformation("Creating Files table...");
-                    using (var createFilesTableCommand = connection.CreateCommand())
+                    app.Logger.LogWarning("Таблица Files не найдена. Создаем...");
+                    
+                    using (var createTableCommand = connection.CreateCommand())
                     {
-                        createFilesTableCommand.CommandText = @"
-                            CREATE TABLE ""Files"" (
+                        createTableCommand.CommandText = @"
+                            CREATE TABLE IF NOT EXISTS ""Files"" (
                                 ""Id"" uuid NOT NULL,
                                 ""FileName"" text NOT NULL,
                                 ""Hash"" text NOT NULL,
@@ -74,43 +61,75 @@ using (var scope = app.Services.CreateScope())
                                 CONSTRAINT ""PK_Files"" PRIMARY KEY (""Id"")
                             );
                             
-                            CREATE UNIQUE INDEX ""IX_Files_Hash"" ON ""Files"" (""Hash"");
-                        ";
-                        createFilesTableCommand.ExecuteNonQuery();
-                    }
-                    
-                    // Записываем информацию о "миграции" в таблицу __EFMigrationsHistory
-                    using (var insertMigrationCommand = connection.CreateCommand())
-                    {
-                        insertMigrationCommand.CommandText = @"
+                            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Files_Hash"" ON ""Files"" (""Hash"");
+                            
+                            -- Добавляем запись в таблицу миграций, если она существует
                             INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
-                            VALUES ('20230522000000_InitialCreate', '9.0.0-preview.2.24128.4')
+                            SELECT '20230522000000_InitialCreate', '9.0.0-preview.2.24128.4'
+                            WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '__EFMigrationsHistory')
                             ON CONFLICT DO NOTHING;
                         ";
-                        insertMigrationCommand.ExecuteNonQuery();
+                        createTableCommand.ExecuteNonQuery();
+                        app.Logger.LogInformation("Таблица Files успешно создана.");
                     }
-                    
-                    app.Logger.LogInformation("Database initialized successfully.");
                 }
                 else
                 {
-                    app.Logger.LogInformation("Files table already exists.");
+                    app.Logger.LogInformation("Таблица Files уже существует.");
                 }
             }
+            
+            connection.Close();
+            databaseInitialized = true;
+            app.Logger.LogInformation("Подключение к базе данных успешно установлено.");
         }
-        finally
+    }
+    catch (Exception ex)
+    {
+        retryCount++;
+        
+        if (retryCount < maxRetries)
         {
-            if (connection.State == System.Data.ConnectionState.Open)
+            app.Logger.LogWarning(ex, $"Ошибка подключения к базе данных. Повторная попытка через 5 секунд... ({retryCount}/{maxRetries})");
+            Thread.Sleep(5000);
+        }
+        else
+        {
+            app.Logger.LogError(ex, "Не удалось подключиться к базе данных после нескольких попыток.");
+            throw;
+        }
+    }
+}
+
+app.MapGet("/api/debug/check-files-table", async (FileDbContext dbContext) =>
+{
+    try
+    {
+        var connection = dbContext.Database.GetDbConnection();
+        connection.Open();
+        
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Files')";
+            var exists = (bool)command.ExecuteScalar();
+            connection.Close();
+            
+            if (exists)
             {
-                connection.Close();
+                var count = await dbContext.Files.CountAsync();
+                return Results.Ok(new { Status = "OK", TableExists = true, RecordsCount = count });
+            }
+            else
+            {
+                return Results.Ok(new { Status = "Error", TableExists = false, Message = "Таблица Files не существует" });
             }
         }
     }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "An error occurred while initializing the database.");
+        return Results.Problem(ex.ToString());
     }
-}
+});
 
 if (app.Environment.IsDevelopment())
 {

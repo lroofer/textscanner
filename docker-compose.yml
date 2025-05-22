@@ -20,7 +20,8 @@ services:
     build:
       context: ./file-storing-service
     depends_on:
-      - file-storing-db
+      - file-storing-db:
+        condition: service_healthy
     networks:
       - scanner-network
     volumes:
@@ -54,8 +55,14 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - file-storing-db-data:/var/lib/postgresql/data
+      - ./init-file-storing-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - scanner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   file-analysis-db:
     image: postgres:14
