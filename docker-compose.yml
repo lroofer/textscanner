@@ -13,8 +13,8 @@ services:
       - scanner-network
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - FileStoringService__Url=http://file-storing-service
-      - FileAnalysisService__Url=http://file-analysis-service
+      - FileStoringService__Url=http://file-storing-service:8080
+      - FileAnalysisService__Url=http://file-analysis-service:8080
 
   file-storing-service:
     build:
@@ -43,7 +43,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__FileAnalysisDb=Host=file-analysis-db;Database=fileanalysis;Username=postgres;Password=postgres
-      - FileStoringService__Url=http://file-storing-service
+      - FileStoringService__Url=http://file-storing-service:8080
       - StoragePath=/app/storage
 
   file-storing-db:
