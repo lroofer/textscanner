@@ -27,21 +27,7 @@ public class FilesController : ControllerBase
         try
         {
             var (response, isExisting) = await _fileStorageService.StoreFileAsync(file);
-            
-            if (isExisting)
-        {
-           _logger.LogInformation($"File already exists, returning ID: {response.Id}");
-            
-            var result = new
-            {
-                Id = response.Id,
-                FileName = response.FileName,
-                IsNew = false
-            };
-            
-            return StatusCode(StatusCodes.Status304NotModified, result);
-        }
-            
+
             return Ok(response);
         }
         catch (Exception ex)

@@ -48,11 +48,10 @@ public class FileController : ControllerBase
 
             _logger.LogInformation($"Received response: {response.StatusCode}");
 
-            if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
-            {
-                return StatusCode((int)response.StatusCode, responseContent);
-            }
-            else if (response.IsSuccessStatusCode)
+            var responseContent = await response.Content.ReadAsStreamAsync();
+            _logger.LogInformation($"Response content: {responseContent}");
+
+            if (response.IsSuccessStatusCode)
             {
                 return Ok(responseContent);
             }

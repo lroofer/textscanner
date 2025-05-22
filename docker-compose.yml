@@ -20,7 +20,7 @@ services:
     build:
       context: ./file-storing-service
     depends_on:
-      - file-storing-db:
+      file-storing-db:
         condition: service_healthy
     networks:
       - scanner-network
