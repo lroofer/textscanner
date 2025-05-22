@@ -5,7 +5,7 @@ services:
     build:
       context: ./api-gateway
     ports:
-      - "5000:80"
+      - "3535:8080"
     depends_on:
       - file-storing-service
       - file-analysis-service

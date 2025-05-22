@@ -1,0 +1,47 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "file-storing-service", "file-storing-service", "{2C8C90CF-69A5-81F1-437C-8A35C6825A24}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "api-gateway", "api-gateway", "{D5740E39-79EC-8D71-EBC3-DD458F48E25C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "file-analysis-service", "file-analysis-service", "{B12C641B-381A-3B59-1D67-9D52C1A213E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStoringService", "file-storing-service\src\FileStoringService.csproj", "{BF28707A-4966-F871-DE15-FBC193871FAA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "api-gateway\src\ApiGateway.csproj", "{F5914B5C-1DED-C288-8893-235CE864FA59}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileAnalysisService", "file-analysis-service\src\FileAnalysisService.csproj", "{7FAA5989-02ED-258B-02F3-7AC874369239}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF28707A-4966-F871-DE15-FBC193871FAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF28707A-4966-F871-DE15-FBC193871FAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF28707A-4966-F871-DE15-FBC193871FAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF28707A-4966-F871-DE15-FBC193871FAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5914B5C-1DED-C288-8893-235CE864FA59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5914B5C-1DED-C288-8893-235CE864FA59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5914B5C-1DED-C288-8893-235CE864FA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5914B5C-1DED-C288-8893-235CE864FA59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FAA5989-02ED-258B-02F3-7AC874369239}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FAA5989-02ED-258B-02F3-7AC874369239}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FAA5989-02ED-258B-02F3-7AC874369239}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FAA5989-02ED-258B-02F3-7AC874369239}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BF28707A-4966-F871-DE15-FBC193871FAA} = {2C8C90CF-69A5-81F1-437C-8A35C6825A24}
+		{F5914B5C-1DED-C288-8893-235CE864FA59} = {D5740E39-79EC-8D71-EBC3-DD458F48E25C}
+		{7FAA5989-02ED-258B-02F3-7AC874369239} = {B12C641B-381A-3B59-1D67-9D52C1A213E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7EBC063E-0363-4CC3-8510-D58B46A33629}
+	EndGlobalSection
+EndGlobal
