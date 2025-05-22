@@ -8,11 +8,13 @@ namespace FileStoringService.Controllers;
 public class FilesController : ControllerBase
 {
     private readonly FileStorageService _fileStorageService;
+    private readonly FileDbContext _dbContext;
     private readonly ILogger<FilesController> _logger;
 
-    public FilesController(FileStorageService fileStorageService, ILogger<FilesController> logger)
+    public FilesController(FileStorageService fileStorageService, FileDbContext dbContext, ILogger<FilesController> logger)
     {
         _fileStorageService = fileStorageService;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
@@ -75,24 +77,24 @@ public class FilesController : ControllerBase
         try
         {
             _logger.LogInformation($"Retrieving file bytes for ID {id}");
-            
+
             var fileEntity = await _dbContext.Files.FirstOrDefaultAsync(f => f.Id == id);
             if (fileEntity == null)
             {
                 _logger.LogWarning($"File with ID {id} not found in database");
                 return NotFound($"File with ID {id} not found");
             }
-            
+
             var filePath = fileEntity.Location;
             if (!System.IO.File.Exists(filePath))
             {
                 _logger.LogWarning($"File {filePath} not found on disk");
                 return NotFound($"File {filePath} not found on disk");
             }
-            
+
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
             _logger.LogInformation($"Read {fileBytes.Length} bytes from file {fileEntity.FileName}");
-            
+
             return Ok(new
             {
                 Id = fileEntity.Id,
@@ -107,5 +109,24 @@ public class FilesController : ControllerBase
             _logger.LogError(ex, $"Error retrieving file bytes for ID {id}");
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
+    }
+
+    private string GetContentType(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".txt" => "text/plain",
+            ".pdf" => "application/pdf",
+            ".doc" => "application/msword",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls" => "application/vnd.ms-excel",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".png" => "image/png",
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            _ => "application/octet-stream"
+        };
     }
 }
