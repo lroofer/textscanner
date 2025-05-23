@@ -20,3 +20,5 @@ To analyza file use GET command http://localhost:3535/api/analyze-file/{id}
 It will return JSON as an answer
 
 curl -v http://localhost:3535/api/analyze-file/
+
+I also attached folder "images-as-example" of the screenshots of bruno queries
