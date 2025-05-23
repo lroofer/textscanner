@@ -114,16 +114,33 @@ public class FileAnalyzer
                 };
             }
             
-            var contentUrl = $"{fileStoringServiceUrl}/api/files/{fileId}/direct-download";
+            var contentUrl = $"{fileStoringServiceUrl}/api/files/{fileId}/bytes";
             _logger.LogInformation($"Requesting content from {contentUrl}");
             
-            var contentResponse = await _httpClient.GetAsync(contentUrl);
+            var contentResponse = await _httpClient.GetStringAsync(contentUrl);
             if (!contentResponse.IsSuccessStatusCode)
             {
                 throw new HttpRequestException($"Error getting file content: {contentResponse.StatusCode}");
             }
             
-            var fileContent = await contentResponse.Content.ReadAsStringAsync();
+            var fileInfo = JsonSerializer.Deserialize<FileInfoWithBytes>(contentResponse, 
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (fileInfo == null)
+            {
+                _logger.LogWarning("Failed to deserialize file info");
+                throw new HttpRequestException("Failed to process file information");
+            }
+
+            if (string.IsNullOrEmpty(fileInfo.Bytes))
+            {
+                _logger.LogWarning("File bytes are empty");
+                throw new HttpRequestException("File bytes are empty");
+            }
+
+            byte[] fileBytes = Convert.FromBase64String(fileInfo.Bytes);
+
+            string fileContent = Encoding.UTF8.GetString(fileBytes);
             
             var (paragraphCount, wordCount, charCount) = AnalyzeText(fileContent);
             
@@ -156,30 +173,6 @@ public class FileAnalyzer
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Error analyzing file with ID {fileId}");
-            
-            try
-            {
-                var errorResult = new FileAnalysisResult
-                {
-                    Id = Guid.NewGuid(),
-                    FileId = fileId,
-                    FileName = "Unknown",
-                    ParagraphCount = 0,
-                    WordCount = 0,
-                    CharacterCount = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    IsError = true,
-                    ErrorMessage = ex.Message
-                };
-                
-                _dbContext.FileAnalysisResults.Add(errorResult);
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (Exception dbEx)
-            {
-                _logger.LogError(dbEx, "Error saving error information to database");
-            }
-            
             throw;
         }
     }

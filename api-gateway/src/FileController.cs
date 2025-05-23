@@ -140,17 +140,13 @@ public class FileController : ControllerBase
         {
             _logger.LogInformation($"Requesting analysis for file with ID {id}");
             
-            // Формируем URL для запроса анализа
             var analysisUrl = $"{fileAnalysisServiceUrl}/api/get_analysis/{id}";
             _logger.LogInformation($"Requesting analysis from {analysisUrl}");
             
-            // Отправляем запрос
             var response = await _httpClient.GetAsync(analysisUrl);
             
-            // Получаем содержимое ответа
             var responseContent = await response.Content.ReadAsStringAsync();
             
-            // Проверяем успешность запроса
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning($"Analysis service returned status code: {response.StatusCode}, Content: {responseContent}");
@@ -163,7 +159,6 @@ public class FileController : ControllerBase
                 return StatusCode((int)response.StatusCode, responseContent);
             }
             
-            // Возвращаем результаты анализа
             return Ok(responseContent);
         }
         catch (Exception ex)

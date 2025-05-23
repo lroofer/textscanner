@@ -45,34 +45,30 @@ public class FilesController : ControllerBase
         }
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetFile(Guid id)
+    [HttpGet("{id}/metadata")]
+    public async Task<IActionResult> GetFileMetadata(Guid id)
     {
         try
         {
-            _logger.LogInformation($"Retrieving file with ID {id}");
-            var (fileStream, contentType, fileName) = await _fileStorageService.GetFileAsync(id);
+            _logger.LogInformation($"Retrieving file bytes for ID {id}");
 
-            fileStream.Position = 0;
+            var fileEntity = await _dbContext.Files.FirstOrDefaultAsync(f => f.Id == id);
+            if (fileEntity == null)
+            {
+                _logger.LogWarning($"File with ID {id} not found in database");
+                return NotFound($"File with ID {id} not found");
+            }
 
-            _logger.LogInformation($"Returning file {fileName}, size: {fileStream.Length} bytes, content type: {contentType}");
-
-            var memoryStream = new MemoryStream();
-            await fileStream.CopyToAsync(memoryStream);
-            fileStream.Dispose();
-
-            memoryStream.Position = 0;
-
-            return File(memoryStream, contentType, fileName);
-        }
-        catch (FileNotFoundException ex)
-        {
-            _logger.LogWarning(ex.Message);
-            return NotFound(ex.Message);
+            return Ok(new FileMetaData
+            {
+                Id = fileEntity.Id,
+                FileName = fileEntity.FileName,
+                ContentType = GetContentType(fileEntity.FileName),
+            });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error retrieving file with ID {id}");
+            _logger.LogError(ex, $"Error retrieving file bytes for ID {id}");
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }

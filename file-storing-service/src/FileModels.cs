@@ -15,3 +15,10 @@ public class FileUploadResponse
     public string FileName { get; set; }
     public bool IsNew { get; set; }
 }
+
+public class FileMetaData
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; }
+    public string ContentType { get; set; }
+}
