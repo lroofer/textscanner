@@ -6,6 +6,7 @@ namespace ApiGateway.Controllers;
 
 [ApiController]
 [Route("api")]
+[Produces("application/json")]
 public class FileController : ControllerBase
 {
     private readonly HttpClient _httpClient;
@@ -19,8 +20,35 @@ public class FileController : ControllerBase
         _configuration = configuration;
     }
 
+    /// <summary>
+    /// Загрузка файла в систему
+    /// </summary>
+    /// <param name="file">Файл для загрузки</param>
+    /// <returns>Информация о загруженном файле</returns>
+    /// <remarks>
+    /// Пример запроса:
+    /// 
+    ///     POST /api/upload-file
+    ///     Content-Type: multipart/form-data
+    ///     
+    ///     --boundary
+    ///     Content-Disposition: form-data; name="file"; filename="example.txt"
+    ///     Content-Type: text/plain
+    ///     
+    ///     Содержимое файла
+    ///     --boundary--
+    /// 
+    /// </remarks>
+    /// <response code="200">Файл успешно загружен</response>
+    /// <response code="304">Файл уже существует в системе</response>
+    /// <response code="400">Некорректный запрос (файл отсутствует или пуст)</response>
+    /// <response code="500">Ошибка сервера при обработке запроса</response>
     [HttpPost("upload-file")]
     [Consumes("multipart/form-data")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UploadFile(IFormFile file)
     {
         if (file == null || file.Length == 0)
@@ -69,7 +97,26 @@ public class FileController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Скачивание файла по идентификатору
+    /// </summary>
+    /// <param name="id">Идентификатор файла</param>
+    /// <returns>Содержимое файла</returns>
+    /// <remarks>
+    /// Пример запроса:
+    /// 
+    ///     GET /api/download-file/123e4567-e89b-12d3-a456-426614174000
+    /// 
+    /// </remarks>
+    /// <response code="200">Файл успешно найден и возвращен</response>
+    /// <response code="400">Некорректный идентификатор файла</response>
+    /// <response code="404">Файл не найден</response>
+    /// <response code="500">Ошибка сервера при обработке запроса</response>
     [HttpGet("download-file/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DownloadFile(Guid id)
     {
         if (id == Guid.Empty)
@@ -121,7 +168,38 @@ public class FileController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Анализ текстового файла
+    /// </summary>
+    /// <param name="id">Идентификатор файла</param>
+    /// <returns>Результаты анализа (количество абзацев, слов, символов)</returns>
+    /// <remarks>
+    /// Пример запроса:
+    /// 
+    ///     GET /api/analyze-file/123e4567-e89b-12d3-a456-426614174000
+    /// 
+    /// Пример ответа:
+    /// 
+    ///     {
+    ///        "fileId": "123e4567-e89b-12d3-a456-426614174000",
+    ///        "fileName": "example.txt",
+    ///        "paragraphCount": 3,
+    ///        "wordCount": 50,
+    ///        "characterCount": 250,
+    ///        "analysisDate": "2023-05-22T12:34:56.789Z",
+    ///        "isError": false
+    ///     }
+    /// 
+    /// </remarks>
+    /// <response code="200">Анализ успешно выполнен</response>
+    /// <response code="400">Некорректный идентификатор файла или файл не является текстовым</response>
+    /// <response code="404">Файл не найден</response>
+    /// <response code="500">Ошибка сервера при обработке запроса</response>
     [HttpGet("analyze-file/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> AnalyzeFile(Guid id)
     {
         if (id == Guid.Empty)
