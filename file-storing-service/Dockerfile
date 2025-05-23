@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-COPY ["src/*.csproj", "./"]
+COPY ["*.csproj", "./"]
 
 RUN dotnet add package Microsoft.EntityFrameworkCore --version 9.0.0-preview.2.24128.4
 RUN dotnet add package Microsoft.EntityFrameworkCore.Design --version 9.0.0-preview.2.24128.4
