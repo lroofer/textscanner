@@ -1,0 +1,99 @@
+{
+  "info": {
+    "name": "textChecker",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Upload file",
+      "event": [],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "description": "",
+        "url": {
+          "raw": "http://localhost:3535/api/upload-file",
+          "protocol": "http",
+          "host": [
+            "localhost:3535"
+          ],
+          "path": [
+            "api",
+            "upload-file"
+          ],
+          "query": [],
+          "variable": []
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "File",
+              "value": [
+                "/Users/lroofer/Downloads/GMT20250514-125954_RecordingnewChat.txt"
+              ],
+              "disabled": false,
+              "type": "default"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Download file",
+      "event": [],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "description": "",
+        "url": {
+          "raw": "http://localhost:3535/api/download-file/92856b62-a26d-453b-af56-1b0d415c0104",
+          "protocol": "http",
+          "host": [
+            "localhost:3535"
+          ],
+          "path": [
+            "api",
+            "download-file",
+            "92856b62-a26d-453b-af56-1b0d415c0104"
+          ],
+          "query": [],
+          "variable": []
+        }
+      }
+    },
+    {
+      "name": "Analyza file",
+      "event": [],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "auth": {
+          "type": "noauth"
+        },
+        "description": "",
+        "url": {
+          "raw": "http://localhost:3535/api/analyze-file/92856b62-a26d-453b-af56-1b0d415c0104",
+          "protocol": "http",
+          "host": [
+            "localhost:3535"
+          ],
+          "path": [
+            "api",
+            "analyze-file",
+            "92856b62-a26d-453b-af56-1b0d415c0104"
+          ],
+          "query": [],
+          "variable": []
+        }
+      }
+    }
+  ],
+  "variable": []
+}

@@ -21,4 +21,17 @@ It will return JSON as an answer
 
 curl -v http://localhost:3535/api/analyze-file/
 
-I also attached folder "images-as-example" of the screenshots of bruno queries
+I also attached folder "images-as-example" of the screenshots of bruno queries and postman collection
+
+## Architecture
+
+- api-gateway is a service that distributes queries to other microservices (it is one and only entry point for all the system)
+- file-storing-service opperates with files
+1. Uploading
+2. Downloading
+3. Getting meta data (meta data is a way to get some information about file before downloading it. I use it to prevent analyzing huge binary files)
+- file-analysis-service analyzes file
+It can store hash for the previously analyzed files and also analyze new files
+
+You can get the postman configuration in Attachments/textChecker-postman-collection.json
+Or use swagger at http://localhost:3535/swagger
