@@ -6,7 +6,6 @@ namespace ApiGateway.Controllers;
 
 [ApiController]
 [Route("api")]
-[Produces("application/json")]
 public class FileController : ControllerBase
 {
     private readonly HttpClient _httpClient;
