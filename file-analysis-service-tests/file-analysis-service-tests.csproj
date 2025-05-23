@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\file-analysis-service\src\FileAnalysisService.csproj" />
+    <ProjectReference Include="..\file-analysis-service\FileAnalysisService.csproj" />
   </ItemGroup>
 
 </Project>

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FileAnalysisService.Services;
 
-public class FileAnalyzer
+public class FileAnalyzer : IFileAnalyzer
 {
     private readonly FileAnalysisDbContext _dbContext;
     private readonly HttpClient _httpClient;

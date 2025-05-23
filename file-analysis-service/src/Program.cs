@@ -13,7 +13,7 @@ builder.Services.AddDbContext<FileAnalysisDbContext>(options =>
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddScoped<FileAnalyzer>();
+builder.Services.AddScoped<IFileAnalyzer, FileAnalyzer>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

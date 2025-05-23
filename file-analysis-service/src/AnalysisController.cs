@@ -11,10 +11,10 @@ namespace FileAnalysisService.Controllers;
 [Route("api")]
 public class AnalysisController : ControllerBase
 {
-    private readonly FileAnalyzer _fileAnalyzer;
+    private readonly IFileAnalyzer _fileAnalyzer;
     private readonly ILogger<AnalysisController> _logger;
 
-    public AnalysisController(FileAnalyzer fileAnalyzer, ILogger<AnalysisController> logger)
+    public AnalysisController(IFileAnalyzer fileAnalyzer, ILogger<AnalysisController> logger)
     {
         _fileAnalyzer = fileAnalyzer;
         _logger = logger;
