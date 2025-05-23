@@ -63,7 +63,7 @@ Implementation details of microservices are hidden from clients
 Clients interact with a single endpoint
 
 ### To run some unit tests
-You need to run dotnet test command from the tests folder to run tests
+You need to run dotnet test command from the tests folder to run tests (project needs to be restored - it will happen automatically, enter `dotnet restore` to do it manually)
 ```bash
 cd file-analysis-service-tests
 dotnet test
