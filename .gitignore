@@ -3,6 +3,7 @@
 *.*~
 */src/project.lock.json
 */.DS_Store
+.DS_Store
 *.pyc
 */src/nupkg/
 
