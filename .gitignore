@@ -31,3 +31,6 @@
 */src/msbuild.log
 */src/msbuild.err
 */src/msbuild.wrn
+*/[Bb]in/
+*/[Oo]bj/
+*/[Oo]ut/

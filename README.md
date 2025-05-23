@@ -61,3 +61,10 @@ I also attached folder "images-as-example" of the screenshots of bruno queries a
 It can store hash for the previously analyzed files and also analyze new files
 Implementation details of microservices are hidden from clients
 Clients interact with a single endpoint
+
+### To run some unit tests
+You need to run dotnet test command from the tests folder to run tests
+```bash
+cd file-analysis-service-tests
+dotnet test
+```
