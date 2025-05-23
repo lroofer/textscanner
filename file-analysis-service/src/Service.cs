@@ -118,10 +118,6 @@ public class FileAnalyzer
             _logger.LogInformation($"Requesting content from {contentUrl}");
             
             var contentResponse = await _httpClient.GetStringAsync(contentUrl);
-            if (!contentResponse.IsSuccessStatusCode)
-            {
-                throw new HttpRequestException($"Error getting file content: {contentResponse.StatusCode}");
-            }
             
             var fileInfo = JsonSerializer.Deserialize<FileInfoWithBytes>(contentResponse, 
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
